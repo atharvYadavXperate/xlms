@@ -7,5 +7,4 @@ import (
 func main() {
 	db.ConnectDb()
 	defer db.CloseConnection()
-
 }
