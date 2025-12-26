@@ -1,8 +1,11 @@
 package main
 
-import "fmt"
+import (
+	db "github.com/atharvYadavXperate/xlms/database"
+)
 
 func main() {
-	fmt.Println("Xperate Leave Management System")
-	fmt.Println("hey")
+	db.ConnectDb()
+	defer db.CloseConnection()
+
 }
