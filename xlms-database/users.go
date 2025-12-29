@@ -3,20 +3,24 @@ package database
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	u "github.com/atharvYadavXperate/xlms/types"
 )
 
-func CreateUser(ctx context.Context, fullName, email, role string) (int64, error) {
-	var userID int64
+func CreateUser(ctx context.Context, fullName, email string, role_id int) (int64, error) {
+	if Pool == nil {
+		return 0, errors.New("database pool is not initialized")
+	}
 
+	var userID int64
 	query := `
-		INSERT INTO users (full_name, email, role)
+		INSERT INTO users (full_name, email, role_id)
 		VALUES ($1, $2, $3)
 		RETURNING id
 	`
 
-	err := Pool.QueryRow(ctx, query, fullName, email, role).Scan(&userID)
+	err := Pool.QueryRow(ctx, query, fullName, email, role_id).Scan(&userID)
 	if err != nil {
 		return 0, err
 	}
@@ -26,23 +30,73 @@ func CreateUser(ctx context.Context, fullName, email, role string) (int64, error
 
 func GetUserByID(ctx context.Context, id int64) (u.User, error) {
 	var user u.User
+	fmt.Println("Problem")
 	query := `
-		SELECT id, full_name, email, role, is_approved, created_at, updated_at
-		FROM users
-		WHERE id = $1 AND deleted_at IS NULL
+		SELECT 
+			a.id,
+			a.full_name,
+			a.email,
+			a.is_approved,
+			a.created_at,
+			a.reporting_to,
+			r.id   AS role_id,
+			r.role AS role
+		FROM users a
+		LEFT JOIN roles r ON a.role_id = r.id
+		WHERE a.id = $1;
 	`
-	err := Pool.QueryRow(ctx, query, id).
-		Scan(
-			&user.ID,
-			&user.FullName,
-			&user.Email,
-			&user.RoleId,
-			&user.IsApproved,
-			&user.CreatedAt,
-		)
+
+	err := Pool.QueryRow(ctx, query, id).Scan(
+		&user.ID,
+		&user.FullName,
+		&user.Email,
+		&user.IsApproved,
+		&user.CreatedAt,
+		&user.ReportingToID,
+		&user.RoleId,
+		&user.Role,
+	)
+
 	if err != nil {
 		return u.User{}, err
 	}
+
+	return user, nil
+}
+
+func GetUserByEmail(ctx context.Context, email string) (u.User, error) {
+	var user u.User
+
+	query := `
+		SELECT 
+			a.id,
+			a.full_name,
+			a.email,
+			a.is_approved,
+			a.created_at,
+			a.reporting_to,
+			r.id   AS role_id,
+			r.role AS role
+		FROM users a
+		LEFT JOIN roles r ON a.role_id = r.id
+		WHERE a.email = $1;
+	`
+
+	err := Pool.QueryRow(ctx, query, email).Scan(
+		&user.ID,
+		&user.FullName,
+		&user.Email,
+		&user.IsApproved,
+		&user.CreatedAt,
+		&user.ReportingToID,
+		&user.RoleId,
+		&user.Role,
+	)
+
+	if err != nil {
+		return u.User{}, err
+	}
+
 	return user, nil
 }
 
@@ -74,7 +128,7 @@ func GetUsersByManager(ctx context.Context, id int64, page int) ([]u.User, error
 			&user.RoleId,
 			&user.IsApproved,
 			&user.CreatedAt,
-			&user.ReportingTo,
+			&user.ReportingToID,
 		)
 		if err != nil {
 			return nil, err
@@ -84,15 +138,15 @@ func GetUsersByManager(ctx context.Context, id int64, page int) ([]u.User, error
 	return users, nil
 }
 
-func UpdateUser(ctx context.Context, id int64, fullName string, email string, role string) (u.User, error) {
+func UpdateUser(ctx context.Context, id int64, fullName string, email string, role int) (u.User, error) {
 	var user u.User
 	query := `
 		UPDATE users
 		SET full_name = $1,
 		    email = $2,
-		    role = $3
-		WHERE id = $4 AND deleted_at IS NULL
-		RETURNING id, full_name, email, role, is_approved, created_at, updated_at
+		    role_id = $3
+		WHERE id = $4 
+		RETURNING id, full_name, email, role_id, is_approved, created_at
 	`
 	err := Pool.QueryRow(ctx, query, fullName, email, role, id).
 		Scan(
@@ -103,7 +157,7 @@ func UpdateUser(ctx context.Context, id int64, fullName string, email string, ro
 			&user.IsApproved,
 			&user.CreatedAt,
 		)
-
+	fmt.Println(err)
 	if err != nil {
 		return u.User{}, err
 	}
@@ -115,8 +169,8 @@ func VerifyUser(ctx context.Context, id int64) (u.User, error) {
 	query := `
 		UPDATE users
 		SET is_approved = true
-		WHERE id = $1 AND deleted_at IS NULL
-		RETURNING id, full_name, email, role, is_approved, created_at, updated_at
+		WHERE id = $1 
+		RETURNING id, full_name, email, role_id, is_approved, created_at
 	`
 	err := Pool.QueryRow(ctx, query, id).
 		Scan(
@@ -133,18 +187,17 @@ func VerifyUser(ctx context.Context, id int64) (u.User, error) {
 	return user, nil
 }
 
-func SoftDeleteUser(ctx context.Context, id int64) error {
+func SoftDeleteUser(ctx context.Context, id int64) (u.User, error) {
+	var user u.User
 	query := `
 		UPDATE users
-		SET deleted_at = NOW()
-		WHERE id = $1 AND deleted_at IS NULL
+		SET is_approved = false
+		WHERE id = $1 
+		RETURNING id, full_name, email, role_id, is_approved, created_at
 	`
-	cmd, err := Pool.Exec(ctx, query, id)
+	err := Pool.QueryRow(ctx, query, id).Scan(&user.ID, &user.FullName, &user.Email, &user.RoleId, &user.IsApproved, &user.CreatedAt)
 	if err != nil {
-		return err
+		return u.User{}, err
 	}
-	if cmd.RowsAffected() == 0 {
-		return errors.New("user not found or already deleted")
-	}
-	return nil
+	return user, nil
 }

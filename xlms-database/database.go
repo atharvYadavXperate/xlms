@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 
@@ -15,19 +14,31 @@ var Pool *pgxpool.Pool
 func ConnectDb() {
 	ctx := context.Background()
 
-	var err error
-	err = godotenv.Load()
-	if err != nil {
-		panic(err)
+	if err := godotenv.Load(); err != nil {
+		log.Println(".env file not found, using system env")
 	}
+
 	connStr := os.Getenv("DB_URL")
+	if connStr == "" {
+		log.Fatal("DB_URL is not set")
+	}
+
+	var err error
 	Pool, err = pgxpool.New(ctx, connStr)
 	if err != nil {
 		log.Fatalf("Unable to create connection pool: %v\n", err)
 	}
-	fmt.Println("Database Connected successfully")
+
+	// 🔥 IMPORTANT: verify connection
+	if err = Pool.Ping(ctx); err != nil {
+		log.Fatalf("Database ping failed: %v\n", err)
+	}
+
+	log.Println("Database Connected successfully")
 }
 
 func CloseConnection() {
-	Pool.Close()
+	if Pool != nil {
+		Pool.Close()
+	}
 }
