@@ -138,6 +138,47 @@ func GetUsersByManager(ctx context.Context, id int64, page int) ([]u.User, error
 	return users, nil
 }
 
+func GetUsers(ctx context.Context, page int, limit int) ([]u.User, error) {
+	const maxlimit = 500
+	if limit > maxlimit {
+		limit = maxlimit
+	}
+	offset := 0
+	if page > 1 {
+		offset = (page - 1) * limit
+	}
+	query := `
+		SELECT id, full_name, email, role_id, is_approved, created_at, reporting_to
+		FROM users
+		ORDER BY id
+		LIMIT $1 OFFSET $2
+	`
+
+	rows, err := Pool.Query(ctx, query, limit, offset)
+	defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+	users := []u.User{}
+	for rows.Next() {
+		var user u.User
+		err := rows.Scan(
+			&user.ID,
+			&user.FullName,
+			&user.Email,
+			&user.RoleId,
+			&user.IsApproved,
+			&user.CreatedAt,
+			&user.ReportingToID,
+		)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
+}
+
 func UpdateUser(ctx context.Context, id int64, fullName string, email string, role int) (u.User, error) {
 	var user u.User
 	query := `

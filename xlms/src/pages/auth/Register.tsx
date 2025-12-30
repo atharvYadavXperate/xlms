@@ -3,6 +3,7 @@ import api from "../../api/api";
 import { Toaster, toast } from "react-hot-toast";
 import type { User } from "../../types/user"
 import Spinner from "../../components/Spinner";
+import { Link } from 'react-router-dom'
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -41,7 +42,10 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <Toaster />
+      <Toaster 
+      position="top-right"
+      reverseOrder={false}
+      />
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <h2 className="text-2xl font-semibold text-center mb-6">
           LMS Registration
@@ -88,6 +92,7 @@ export default function Register() {
           >
              {loading ? <Spinner size="sm" color="text-white" /> : "Register"}
           </button>
+          <Link to={"/login"} className="text-blue-800 my-2">Already have account</Link>
         </form>
       </div>
     </div>

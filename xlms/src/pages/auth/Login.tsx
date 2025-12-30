@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import Spinner from "../../components/Spinner";
 import api from "../../api/api";
 import { Toaster, toast } from "react-hot-toast";
+import { Link } from 'react-router-dom'
+
 export default function Login() {
   const [isRequestOtp, setIsRequestOtp] = useState(true);
   const [email, setEmail] = useState("");
@@ -60,7 +62,10 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <Toaster />
+      <Toaster 
+        position="top-right"
+        reverseOrder={false}
+      />
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <h2 className="text-2xl font-semibold text-center mb-6">
           LMS Login
@@ -118,6 +123,8 @@ export default function Login() {
             </button>
           </p>
         )}
+
+        <Link to={"/register"} className="text-blue-800 my-2">Don't have account</Link>
       </div>
     </div>
   );
