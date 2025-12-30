@@ -10,39 +10,24 @@ export default function Header() {
 
   return (
     <header className="w-full bg-blue-400 shadow-md">
-      <div className="
-        mx-auto 
-        px-4 py-3
-        flex flex-col gap-1
-        md:flex-row md:items-center md:justify-between
-      ">
+      <div className="flex flex-col gap-1 px-4 py-3 mx-auto md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
           <img
             src={image}
             onError={() => setImgError(true)}
             alt="Xperate Logo"
-            className="w-9 h-9 rounded-md bg-white p-1"
+            className="p-1 bg-white rounded-md w-9 h-9"
           />
-          <span className="text-white font-bold text-xl sm:text-2xl tracking-wide">
+          <span className="text-xl font-bold tracking-wide text-white sm:text-2xl">
             Xperate
           </span>
         </div>
 
-        <h1 className="
-          text-white font-semibold text-center
-          text-base sm:text-lg md:text-xl
-          tracking-wide
-        ">
+        <h1 className="text-xl font-bold tracking-wide text-white sm:text-2xl">
           Leave Management System
         </h1>
         <div className="flex justify-end md:justify-normal">
-          <div className="
-            w-9 h-9 rounded-full
-            bg-amber-300 text-black font-semibold
-            flex items-center justify-center
-            cursor-pointer
-            hover:scale-105 transition-transform
-          ">
+          <div className="flex items-center justify-center font-semibold text-black transition-transform rounded-full cursor-pointer w-9 h-9 bg-amber-300 hover:scale-105">
             P
           </div>
         </div>
