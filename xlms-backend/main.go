@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	env "github.com/atharvYadavXperate/xlms/backend/handlers"
 	"github.com/atharvYadavXperate/xlms/backend/routers"
 	db "github.com/atharvYadavXperate/xlms/database"
 	"github.com/gorilla/handlers"
@@ -13,6 +14,7 @@ import (
 func main() {
 	db.ConnectDb()
 	defer db.CloseConnection()
+	env.LoadEnv()
 
 	corsHandler := handlers.CORS(
 		handlers.AllowedOrigins([]string{
@@ -21,12 +23,14 @@ func main() {
 		}),
 		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
 		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
+		handlers.AllowCredentials(),
 	)
 
 	router := mux.NewRouter()
 
 	routers.SetupUserRouters(router)
 	routers.SetupAdminRouter(router)
+	routers.SetupRefreshTokenRouter(router)
 
 	log.Println("Server is running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", corsHandler(router)))

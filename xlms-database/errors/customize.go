@@ -9,4 +9,5 @@ var (
 	UserNotApproved             error = errors.New("User not approved")
 	InvalidOtp                  error = errors.New("Invalid Otp")
 	InvalidType                 error = errors.New("This type is not supported")
+	UnauthorizedAccess          error = errors.New("Unauthorized access")
 )

@@ -9,18 +9,15 @@ export default function Header() {
   }
 
   return (
-    <header className="w-full bg-blue-400 shadow-md">
+    <header className="w-full bg-white shadow-md">
       <div className="flex flex-col gap-1 px-4 py-3 mx-auto md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
           <img
             src={image}
             onError={() => setImgError(true)}
             alt="Xperate Logo"
-            className="p-1 bg-white rounded-md w-9 h-9"
+            className="h-10 p-1 rounded-md"
           />
-          <span className="text-xl font-bold tracking-wide text-white sm:text-2xl">
-            Xperate
-          </span>
         </div>
 
         <h1 className="text-xl font-bold tracking-wide text-white sm:text-2xl">

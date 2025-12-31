@@ -30,7 +30,6 @@ func CreateUser(ctx context.Context, fullName, email string, role_id int) (int64
 
 func GetUserByID(ctx context.Context, id int64) (u.User, error) {
 	var user u.User
-	fmt.Println("Problem")
 	query := `
 		SELECT 
 			a.id,

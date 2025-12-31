@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/atharvYadavXperate/xlms/backend/handlers"
 	"github.com/atharvYadavXperate/xlms/backend/utils"
@@ -162,12 +163,50 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		cutomeerror.HandleError(w, err)
 		return
 	}
+	refreshToken, err := utils.GenerateRefreshToken(int64(user.ID), user.Email, int(user.RoleId))
+	if err != nil {
+		log.Println("Refresh token error:", err)
+		return
+	}
+
+	accessToken, err := utils.CreateAccessToken(user.ID, user.Email, int(user.RoleId))
+	if err != nil {
+		log.Println("Access token error:", err)
+		return
+	}
+
+	log.Println("Access Token: %v", accessToken)
+	log.Println("Refresh Token: %v", refreshToken)
+
+	if err != nil {
+		err := cutomeerror.ErrInternal(err)
+		cutomeerror.HandleError(w, err)
+		return
+	}
 
 	loginUser := u.UserAuthRes{
 		Email: user.Email,
 		Role:  int(user.RoleId),
-		Token: "mytoken",
 	}
+	// set access token and refresh token
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    accessToken,
+		Path:     "/",
+		Expires:  time.Now().Add(15 * time.Minute),
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	})
 
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Path:     "/",
+		Expires:  time.Now().Add(7 * 24 * time.Hour),
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	})
 	handlers.Response(w, http.StatusOK, "Login successful", loginUser)
 }

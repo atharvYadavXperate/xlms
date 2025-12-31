@@ -3,6 +3,7 @@ package routers
 import (
 	"net/http"
 
+	"github.com/atharvYadavXperate/xlms/backend/middleware"
 	"github.com/gorilla/mux"
 )
 
@@ -18,7 +19,13 @@ func SetupUserRouters(r *mux.Router) {
 	userRouter.HandleFunc("/register", Register).Methods("POST")
 	userRouter.HandleFunc("/login", Login).Methods("POST")
 	userRouter.HandleFunc("/otp", GenerateOTP).Methods("POST")
-	userRouter.HandleFunc("/getusers", GetUsers).Methods("GET")
+	protected := userRouter.NewRoute().Subrouter()
+	protected.Use(middleware.AuthMiddleWare)
+	protected.HandleFunc("/getusers", GetUsers).Methods("GET")
+}
+
+func SetupRefreshTokenRouter(r *mux.Router) {
+	r.HandleFunc("/refresh", RefreshAccessToken).Methods("POST")
 }
 
 func SetupAdminRouter(r *mux.Router) {

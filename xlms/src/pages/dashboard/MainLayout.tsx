@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import Header from "../../components/Header";
 import { Outlet } from "react-router-dom";
 import Hamburger from "../../components/Hamburger";
 import "../../App.css";
+import { Toaster, toast } from "react-hot-toast";
 
 export default function MainLayout() {
+  
+
   return (
     <div className="h-screen overflow-hidden">
       <Header />

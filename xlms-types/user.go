@@ -7,9 +7,10 @@ import (
 )
 
 type UserAuthRes struct {
-	Email string `json:"email"`
-	Role  int    `json:"role_id"`
-	Token string `json:"token"`
+	Email        string `json:"email"`
+	Role         int    `json:"role_id"`
+	RefreshToken string `json:"refresh_token"`
+	AccessToken  string `json:"access_token"`
 }
 
 type RefreshToken struct {
@@ -19,6 +20,11 @@ type RefreshToken struct {
 	ExpiresAt time.Time `db:"expires_at"`
 	Revoked   bool      `db:"revoked"`
 	CreatedAt time.Time `db:"created_at"`
+}
+type RefreshClaims struct {
+	UserID int64
+	Email  string
+	RoleId int
 }
 
 type AccessToken struct {
