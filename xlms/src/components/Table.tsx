@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { type User } from "../pages/dashboard/Dashboard";
 import type { MonthInfo } from "../components/Calender";
+import UpdateManager from "../components/UpdateManager"
 
 type Day = {
   month: string;
@@ -23,26 +24,36 @@ function DayHeaders({ days }: { days: Day[] }) {
   );
 }
 
-export default function Table({users,month,}: {users: User[];month: MonthInfo | null;}) {
+export default function Table({ users, month, managerList, toast}: { users: User[]; month: MonthInfo | null; managerList: User[], toast:any}) {
   const [days, setDays] = useState<Day[]>([]);
+  const [showDialog, setOpenDialog] = useState(false)
+  const [userData, setUser] = useState<User>()
+
+  const closeDialog = ()=>{
+    setOpenDialog(false)
+  }
+  const openDialog = (user: User)=>{
+    setOpenDialog(true)
+    setUser(user)
+  }
   function generateDaysForMonth(month: MonthInfo): Day[] {
     const result: Day[] = [];
     const start = new Date(month.year, month.month, 1);
-  
+
     for (let i = 0; i < month.days; i++) {
       const current = new Date(start);
       current.setDate(start.getDate() + i);
-  
+
       result.push({
         day: current.toLocaleDateString("en-US", { weekday: "short" }),
         date: current.getDate(),
         month: current.toLocaleDateString("en-US", { month: "long" }),
       });
     }
-  
+
     return result;
   }
-  
+
   useEffect(() => {
     if (!month) return;
     setDays(generateDaysForMonth(month));
@@ -64,9 +75,10 @@ export default function Table({users,month,}: {users: User[];month: MonthInfo | 
           </thead>
 
           <tbody>
+            <UpdateManager managersList={managerList} user={userData} isOpen={showDialog} onClose={closeDialog}/>
             {users.map((user, idx) => (
-              <tr key={idx} className="border-b border-gray-200">
-                <td className="sticky left-0 z-10 p-4 text-sm font-medium bg-white text-slate-800">
+              <tr  key={idx} className="border-b border-gray-200">
+                <td onClick={()=>{openDialog(user);}} className="sticky left-0 z-10 p-4 text-sm font-medium bg-white cursor-pointer text-slate-800">
                   {user.full_name}
                 </td>
 
@@ -74,10 +86,9 @@ export default function Table({users,month,}: {users: User[];month: MonthInfo | 
                   <td
                     key={i}
                     className={`cursor-pointer p-2 text-center text-sm whitespace-nowrap w-[60px]
-                      ${
-                        day.day === "Sat" || day.day === "Sun"
-                          ? "bg-gray-200"
-                          : ""
+                      ${day.day === "Sat" || day.day === "Sun"
+                        ? "bg-gray-200"
+                        : ""
                       }
                       hover:bg-gray-300`}
                   >

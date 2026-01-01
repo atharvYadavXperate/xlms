@@ -9,6 +9,10 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type ContextKey string
+
+const UserContextKey ContextKey = "user"
+
 type RefreshClaims struct {
 	UserID int64
 	Email  string
@@ -22,6 +26,7 @@ func CreateAccessToken(userID int64, email string, roleId int) (string, error) {
 	}
 
 	claims := models.AccessToken{
+		UserId: int(userID),
 		Email:  email,
 		RoleId: roleId,
 		RegisteredClaims: jwt.RegisteredClaims{

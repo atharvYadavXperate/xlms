@@ -136,8 +136,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		cutomeerror.HandleError(w, err)
 		return
 	}
-	log.Println("Email: ", req.Email)
-	log.Println("otp: ", req.Otp)
+
 	if req.Email == "" || req.Otp < 1000 || req.Otp > 9999 {
 		err := cutomeerror.ErrBadRequest("Invalid email or OTP", cutomeerror.FieldsAreRequired)
 		cutomeerror.HandleError(w, err)
@@ -174,9 +173,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		log.Println("Access token error:", err)
 		return
 	}
-
-	log.Println("Access Token: %v", accessToken)
-	log.Println("Refresh Token: %v", refreshToken)
 
 	if err != nil {
 		err := cutomeerror.ErrInternal(err)

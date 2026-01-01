@@ -7,6 +7,7 @@ import { Toaster, toast } from "react-hot-toast";
 import Calendar, { type MonthInfo } from "../../components/Calender";
 
 export type User = {
+  id: number;
   created_at: Date;
   email: string;
   full_name: string;
@@ -17,38 +18,50 @@ export type User = {
 export default function Dashboard() {
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [managerList, setManagerList] = useState<User[]>([]);
   const [search, setSearch] = useState("");
-
   const [monthInfo, setMonthInfo] = useState<MonthInfo | null>(null);
-  const [isFiltered, setFiltered] = useState<boolean>(false)
-  const [searchString, setSearchString] = useState<string>("")
 
   async function loadAllUsers() {
     let page = 1;
     const limit = 20;
 
-    while (true) {
-      const res = await api.get(
-        `/users/getusers?page=${page}&limit=${limit}`
-      );
+    const userMap = new Map<number, User>();
+    const managerMap = new Map<number, User>();
 
-      const fetchedUsers: User[] = res.data.data;
+    try {
+      while (true) {
+        const res = await api.get(
+          `/users/getusers?page=${page}&limit=${limit}`
+        );
 
-      if (fetchedUsers.length === 0) break;
+        const fetchedUsers: User[] = res.data.data;
 
-      setAllUsers(prev => [...prev, ...fetchedUsers]);
+        if (!fetchedUsers || fetchedUsers.length === 0) break;
 
-      if (fetchedUsers.length < limit) break;
+        fetchedUsers.forEach((user) => {
+          userMap.set(user.id, user);
 
-      page++;
+          if (user.role_id !== 3) {
+            managerMap.set(user.id, user);
+          }
+        });
+
+        setAllUsers(Array.from(userMap.values()));
+        setManagerList(Array.from(managerMap.values()));
+
+        if (fetchedUsers.length < limit) break;
+
+        page++;
+      }
+    } catch (error) {
+      toast.error("Failed to load users");
+      throw error;
     }
   }
-
-
   const searchOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
   };
-
 
   useEffect(() => {
     if (!search.trim()) {
@@ -56,28 +69,28 @@ export default function Dashboard() {
       return;
     }
 
-    const filtered = allUsers.filter(user =>
-      user.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      user.email.toLowerCase().includes(search.toLowerCase())
+    const q = search.toLowerCase();
+
+    const filtered = allUsers.filter(
+      (user) =>
+        user.full_name.toLowerCase().includes(q) ||
+        user.email.toLowerCase().includes(q)
     );
 
     setUsers(filtered);
   }, [search, allUsers]);
 
-
   useEffect(() => {
     toast.promise(loadAllUsers(), {
-      loading: "Loading users",
+      loading: "Loading users...",
       success: "Users loaded",
       error: "Failed to load users",
     });
   }, []);
-  
 
   return (
     <div className="overflow-hidden">
       <Toaster />
-
       <div className="flex items-center p-3">
         <DashboardIcon color="primary" fontSize="medium" />
         <h1 className="ml-3 text-2xl font-semibold text-blue-400">
@@ -85,18 +98,22 @@ export default function Dashboard() {
         </h1>
       </div>
 
-      <div className="flex items-center">
+      <div className="flex items-center gap-3 p-2">
         <input
           onChange={searchOnChange}
           type="search"
-          placeholder="Search Employee"
-          className="p-2 mx-2 border-2 border-gray-400 rounded"
+          placeholder="Search employee"
+          className="p-2 border-2 border-gray-400 rounded"
         />
 
         <Calendar setMonth={setMonthInfo} />
       </div>
 
-      <Table month={monthInfo} users={users} />
+      <Table
+        users={users}
+        managerList={managerList}
+        month={monthInfo}
+      />
     </div>
   );
 }

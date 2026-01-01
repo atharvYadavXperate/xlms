@@ -29,5 +29,20 @@ func SetupRefreshTokenRouter(r *mux.Router) {
 }
 
 func SetupAdminRouter(r *mux.Router) {
-	// r.HandleFunc("/get")
+	managerRouter := r.PathPrefix("/managers").Subrouter()
+	protectedRouter := managerRouter.NewRoute().Subrouter()
+	protectedRouter.Use(
+		middleware.AuthMiddleWare,
+		middleware.IsAdminMiddleware,
+	)
+	protectedRouter.HandleFunc("/set", SetManger).Methods("POST")
+}
+
+func SetupLeaveRouter(r *mux.Router) {
+	leaveRouter := r.PathPrefix("/leaves").Subrouter()
+	leaveRouter.HandleFunc("/apply", ApplyForLeave)
+	// Manager and Admin only routes
+	mngAndAdminRoute := leaveRouter.NewRoute().Subrouter()
+	mngAndAdminRoute.Use(middleware.MangerAndAdminOnly)
+	mngAndAdminRoute.HandleFunc("/approve", ApproveLeave)
 }

@@ -28,6 +28,7 @@ type RefreshClaims struct {
 }
 
 type AccessToken struct {
+	UserId int    `json:"id"`
 	Email  string `json:"email"`
 	RoleId int    `json:"role_id"`
 	jwt.RegisteredClaims
